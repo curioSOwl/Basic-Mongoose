@@ -1,5 +1,8 @@
 //Book management project
+require("dotenv").config();
+
 const express= require("express");
+const mongoose =require("mongoose");
 
 //for post request bodyparser is required
 var bodyparser = require("body-parser");
@@ -11,6 +14,14 @@ const booky = express();
 
 booky.use(bodyparser.urlencoded({extended: true}));
 booky.use(bodyparser.json());
+
+
+mongoose.connect(process.env.MONGO_URL,
+{
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}
+).then(()=> console.log("connection established"));
 
 //GET REQUEST
 
