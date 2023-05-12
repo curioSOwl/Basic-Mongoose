@@ -8,7 +8,10 @@ const mongoose =require("mongoose");
 var bodyparser = require("body-parser");
 
 //Database
-const database = require("./database");
+const database = require("./database/database");
+const BookModel =  require("./database/book");
+const AuthorModel=require("./database/author");
+const publicationModel=require("./database/publication");
 
 const booky = express();
 
@@ -26,35 +29,32 @@ mongoose.connect(process.env.MONGO_URL,
 //GET REQUEST
 
 //1.Get all the books present
-booky.get("/",(req,res)=>{
-    return res.json({book: database.books});
+booky.get("/",async(req,res)=>{
+    const getAllBooks = await BookModel.find();
+    return res.json(getAllBooks);
 });
 
 //2.Get specific book
 
-booky.get("/is/:isbn",(req,res)=>{
-    const getbookdetails = database.books.filter(
-        (book) => book.ISBN === req.params.isbn
-    );
+booky.get("/is/:isbn",async(req,res)=>{
+    const getbook=await BookModel.findOne({ISBN: req.params.isbn});
 
-    if(getbookdetails.length===0){
+    if(!getbook){
         return res.json({error: `No book found of ISBN ${req.params.isbn}`});
     }
 
-    return res.json({book: getbookdetails});
+    return res.json({book: getbook});
 });
 
 //3.books details by category
-booky.get("/c/:category",(req,res)=>{
-    const getdetails=database.books.filter(
-        (cate) => cate.category.includes(req.params.category)
-    );
+booky.get("/c/:category",async(req,res)=>{
+    const bookbycat=await BookModel.findOne({category:req.params.category});
 
-    if(getdetails.length===0){
+    if(!bookbycat){
         return res.json({error: `Not found category ${req.params.category}`});
     }
 
-    return res.json({cate: getdetails});
+    return res.json({cate: bookbycat});
 });
 //4.display all authors
 
@@ -77,25 +77,33 @@ booky.get("/a/:isbn",(req,res)=>{
 });
 
 //6.display all the publications
-booky.get("/p",(req,res)=>{
-    return res.json({publications: database.publication})
+booky.get("/p",async(req,res)=>{
+    const getallpub=await publicationModel.find();
+    return res.json(getallpub)
 })
 
 
 //POST REQUEST -- USED TO ADD DATA INTO THE DATABASE
 
 //1.Add new book
-booky.post("/book/new",(req,res)=>{
-    const newBook=req.body;
-    database.books.push(newBook);
-    return res.json({updatedbooks: database.books});
+booky.post("/book/new",async(req,res)=>{
+    const { newBook }=req.body;
+    const addnewbook=BookModel.create(newBook);
+    return res.json({
+        books: addnewbook,
+        message: "successfully added"
+    })
 });
 
 //2.ADD new author
-booky.post("/author/new",(req,res)=>{
-    const newauthor=req.body;
-    database.author.push(newauthor);
-    return res.json({updatedauthor:  database.author});
+booky.post("/author/new",async(req,res)=>{
+    const {newauthor}=req.body;
+    const addnewaut=AuthorModel.create(newauthor);
+    return res.json({
+        author: addnewaut,
+        message: "successfully added"
+    })
+    
 });
 
 //3.ADD new publication
