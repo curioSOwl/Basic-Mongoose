@@ -113,6 +113,69 @@ booky.post("/p/new",(req,res)=>{
     return res.json({updatedpub: database.publication});
 })
 
+
+//update the title of the book whose isbn is given in the route.
+
+//isbn:route
+//title:body
+
+booky.put("/title/update/:isbn",async(req,res)=>{
+    const updatedbook=await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn  //find isbn
+        },
+        {
+            title: req.body.bookTitle  //update booktitle
+        },
+        {
+            new: true
+        }
+
+    );
+    return res.json({
+        books: updatedbook
+    });
+});
+
+//update the author in book database and the corresponding books in the author database
+
+
+booky.put("/author/update/:isbn",async(req,res)=>{
+    const updateauth=await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn
+        },
+        {
+            $addToSet: { 
+                author: req.body.authorname
+            }
+        },{
+            new: true
+        }
+    );
+
+    const updatea=await AuthorModel.findOneAndUpdate(
+        {
+            id: req.body.authorname
+        },
+        {
+            $addToSet: {
+                books: req.params.isbn
+            }
+        },
+        {
+            new:true
+        }
+    );
+
+    return res.json({
+        books: updateauth,
+        author: updatea,
+        message:"Success"
+    });
+});
+
+
 //PUT-UPDATE THE DATA
 booky.put("/p/ub/:isbn",(req,res)=>{
     database.publication.forEach((pub)=>{
@@ -140,13 +203,15 @@ booky.put("/p/ub/:isbn",(req,res)=>{
 //DELETE
 
 //1.Delete a book
-booky.delete("/book/delete/:isbn",(req,res)=>{
-    const updatedbookdatabase=database.books.filter(
-        (book) => book.ISBN !== req.params.isbn
-    )
-    database.books=updatedbookdatabase;
-
-    return res.json({books: database.books});
+booky.delete("/book/delete/:isbn",async(req,res)=>{
+    const updatebook = await BookModel.findOneAndDelete(
+        {
+            ISBN: req.params.isbn
+        }
+    );
+    return res.json({
+        books: updatebook
+    });
 
 });
 
